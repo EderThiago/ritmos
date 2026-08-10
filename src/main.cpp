@@ -54,5 +54,5 @@ void loop() {
     dfPlayer.playMp3Folder(flag);
   
 
-  delay(3000); // Mantiene activo el alimentador del Watchdog
+  delay(3000); 
 }
