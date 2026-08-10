@@ -47,7 +47,7 @@ void setup() {
 
 void loop() {
   
-    
+    //gigfigfikgigjgj
     Serial.print("Reproduciendo pista: ");
     Serial.println(flag);
     
