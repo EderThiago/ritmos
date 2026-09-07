@@ -63,6 +63,200 @@ int secuencia[MAX_SECUENCIA];
 int nivel;
 
 
+void iniciarJuego() {
+
+  nivel = 1;
+
+  // Primer elemento de la secuencia
+  secuencia[0] = random(0, 4);
+
+  lcd.clear();
+
+  lcd.setCursor(0, 0);
+  lcd.print("Nuevo juego!");
+
+  lcd.setCursor(0, 1);
+  lcd.print("Preparate...");
+
+  delay(1500);
+}
+
+
+// =====================================================
+// MOSTRAR SECUENCIA
+// =====================================================
+
+void mostrarSecuencia() {
+
+  for (int i = 0; i < nivel; i++) {
+
+    int numero = secuencia[i];
+
+
+    // Encender LED
+    digitalWrite(leds[numero], HIGH);
+
+    delay(500);
+
+
+    // Apagar LED
+    digitalWrite(leds[numero], LOW);
+
+    delay(250);
+  }
+}
+
+
+int esperarBoton() {
+
+  while (true) {
+
+    for (int i = 0; i < 4; i++) {
+
+      // LOW = botón presionado
+      if (digitalRead(botones[i]) == LOW) {
+
+        // Antirrebote
+        delay(40);
+
+
+        // Esperar a que se suelte
+        while (digitalRead(botones[i]) == LOW) {
+
+          delay(5);
+        }
+
+
+        return i;
+      }
+    }
+  }
+}
+// =====================================================
+// TURNO DEL JUGADOR
+// =====================================================
+
+bool jugadorRepiteSecuencia() {
+
+  lcd.clear();
+
+  lcd.setCursor(0, 0);
+  lcd.print("Tu turno!");
+
+  lcd.setCursor(0, 1);
+  lcd.print("Repite la sec.");
+
+  for (int i = 0; i < nivel; i++) {
+
+    // Esperar botón
+    int boton = esperarBoton();
+
+
+    // Mostrar qué botón pulsó
+    digitalWrite(leds[boton], HIGH);
+
+    delay(200);
+
+    digitalWrite(leds[boton], LOW);
+
+
+    // Comprobar
+    if (boton != secuencia[i]) {
+
+      return false;
+    }
+  }
+
+  return true;
+}
+
+
+// =====================================================
+// ESPERAR BOTÓN
+// =====================================================
+
+
+
+
+// =====================================================
+// GAME OVER
+// =====================================================
+
+void perder() {
+
+  lcd.clear();
+
+  lcd.setCursor(0, 0);
+  lcd.print("   GAME OVER");
+
+  lcd.setCursor(0, 1);
+  lcd.print("Llegaste al ");
+  lcd.print(nivel);
+
+
+  // Parpadeo de los 4 LEDs
+  for (int j = 0; j < 3; j++) {
+
+    // Encender todos
+    for (int i = 0; i < 4; i++) {
+
+      digitalWrite(leds[i], HIGH);
+    }
+
+    delay(250);
+
+
+    // Apagar todos
+    for (int i = 0; i < 4; i++) {
+
+      digitalWrite(leds[i], LOW);
+    }
+
+    delay(250);
+  }
+}
+
+
+// =====================================================
+// GANAR
+// =====================================================
+
+void ganar() {
+
+  lcd.clear();
+
+  lcd.setCursor(0, 0);
+  lcd.print("   GANASTE!");
+
+  lcd.setCursor(0, 1);
+  lcd.print("Nivel MAX!");
+
+
+  // Animación de victoria
+  for (int j = 0; j < 3; j++) {
+
+    // Ida
+    for (int i = 0; i < 4; i++) {
+
+      digitalWrite(leds[i], HIGH);
+
+      delay(100);
+
+      digitalWrite(leds[i], LOW);
+    }
+
+
+    // Vuelta
+    for (int i = 2; i >= 0; i--) {
+
+      digitalWrite(leds[i], HIGH);
+
+      delay(100);
+
+      digitalWrite(leds[i], LOW);
+    }
+  }
+}
 // =====================================================
 // SETUP
 // =====================================================
@@ -187,196 +381,3 @@ void loop() {
 // INICIAR JUEGO
 // =====================================================
 
-void iniciarJuego() {
-
-  nivel = 1;
-
-  // Primer elemento de la secuencia
-  secuencia[0] = random(0, 4);
-
-  lcd.clear();
-
-  lcd.setCursor(0, 0);
-  lcd.print("Nuevo juego!");
-
-  lcd.setCursor(0, 1);
-  lcd.print("Preparate...");
-
-  delay(1500);
-}
-
-
-// =====================================================
-// MOSTRAR SECUENCIA
-// =====================================================
-
-void mostrarSecuencia() {
-
-  for (int i = 0; i < nivel; i++) {
-
-    int numero = secuencia[i];
-
-
-    // Encender LED
-    digitalWrite(leds[numero], HIGH);
-
-    delay(500);
-
-
-    // Apagar LED
-    digitalWrite(leds[numero], LOW);
-
-    delay(250);
-  }
-}
-
-
-// =====================================================
-// TURNO DEL JUGADOR
-// =====================================================
-
-bool jugadorRepiteSecuencia() {
-
-  lcd.clear();
-
-  lcd.setCursor(0, 0);
-  lcd.print("Tu turno!");
-
-  lcd.setCursor(0, 1);
-  lcd.print("Repite la sec.");
-
-  for (int i = 0; i < nivel; i++) {
-
-    // Esperar botón
-    int boton = esperarBoton();
-
-
-    // Mostrar qué botón pulsó
-    digitalWrite(leds[boton], HIGH);
-
-    delay(200);
-
-    digitalWrite(leds[boton], LOW);
-
-
-    // Comprobar
-    if (boton != secuencia[i]) {
-
-      return false;
-    }
-  }
-
-  return true;
-}
-
-
-// =====================================================
-// ESPERAR BOTÓN
-// =====================================================
-
-int esperarBoton() {
-
-  while (true) {
-
-    for (int i = 0; i < 4; i++) {
-
-      // LOW = botón presionado
-      if (digitalRead(botones[i]) == LOW) {
-
-        // Antirrebote
-        delay(40);
-
-
-        // Esperar a que se suelte
-        while (digitalRead(botones[i]) == LOW) {
-
-          delay(5);
-        }
-
-
-        return i;
-      }
-    }
-  }
-}
-
-
-// =====================================================
-// GAME OVER
-// =====================================================
-
-void perder() {
-
-  lcd.clear();
-
-  lcd.setCursor(0, 0);
-  lcd.print("   GAME OVER");
-
-  lcd.setCursor(0, 1);
-  lcd.print("Llegaste al ");
-  lcd.print(nivel);
-
-
-  // Parpadeo de los 4 LEDs
-  for (int j = 0; j < 3; j++) {
-
-    // Encender todos
-    for (int i = 0; i < 4; i++) {
-
-      digitalWrite(leds[i], HIGH);
-    }
-
-    delay(250);
-
-
-    // Apagar todos
-    for (int i = 0; i < 4; i++) {
-
-      digitalWrite(leds[i], LOW);
-    }
-
-    delay(250);
-  }
-}
-
-
-// =====================================================
-// GANAR
-// =====================================================
-
-void ganar() {
-
-  lcd.clear();
-
-  lcd.setCursor(0, 0);
-  lcd.print("   GANASTE!");
-
-  lcd.setCursor(0, 1);
-  lcd.print("Nivel MAX!");
-
-
-  // Animación de victoria
-  for (int j = 0; j < 3; j++) {
-
-    // Ida
-    for (int i = 0; i < 4; i++) {
-
-      digitalWrite(leds[i], HIGH);
-
-      delay(100);
-
-      digitalWrite(leds[i], LOW);
-    }
-
-
-    // Vuelta
-    for (int i = 2; i >= 0; i--) {
-
-      digitalWrite(leds[i], HIGH);
-
-      delay(100);
-
-      digitalWrite(leds[i], LOW);
-    }
-  }
-}
