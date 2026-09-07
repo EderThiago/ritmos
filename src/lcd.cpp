@@ -1,5 +1,9 @@
 #include <LiquidCrystal.h>
 #include <Arduino.h>
+#include "DFRobotDFPlayerMini.h"
+
+HardwareSerial miSerial(1);
+DFRobotDFPlayerMini miPlayer;
 // =====================================================
 // LCD DR ROBOT
 // =====================================================
@@ -33,8 +37,8 @@ LiquidCrystal lcd(
 // =====================================================
 
 const int leds[4] = {
-  25,
-  26,
+  5,
+  34,
   27,
   32
 };
@@ -95,7 +99,7 @@ void mostrarSecuencia() {
 
     // Encender LED
     digitalWrite(leds[numero], HIGH);
-
+    miPlayer.playMp3Folder(numero+1);
     delay(500);
 
 
@@ -115,7 +119,7 @@ int esperarBoton() {
 
       // LOW = botón presionado
       if (digitalRead(botones[i]) == LOW) {
-
+        
         // Antirrebote
         delay(40);
 
@@ -154,7 +158,7 @@ bool jugadorRepiteSecuencia() {
 
     // Mostrar qué botón pulsó
     digitalWrite(leds[boton], HIGH);
-
+    miPlayer.playMp3Folder(boton+1);
     delay(200);
 
     digitalWrite(leds[boton], LOW);
@@ -183,7 +187,7 @@ bool jugadorRepiteSecuencia() {
 // =====================================================
 
 void perder() {
-
+  miPlayer.playMp3Folder(4);
   lcd.clear();
 
   lcd.setCursor(0, 0);
@@ -222,7 +226,7 @@ void perder() {
 // =====================================================
 
 void ganar() {
-
+  miPlayer.playMp3Folder(4);
   lcd.clear();
 
   lcd.setCursor(0, 0);
@@ -264,11 +268,26 @@ void ganar() {
 void setup() {
 
   Serial.begin(115200);
-
+  miSerial.begin(9600, SERIAL_8N1, 25, 26);
   // LCD
   lcd.begin(16, 2);
   lcd.clear();
+  Serial.println("Iniciando DFPlayer...");
 
+    if (!miPlayer.begin(miSerial)) {
+
+        Serial.println("No se encontro el DFPlayer.");
+        Serial.println("Revisa conexiones y tarjeta microSD.");
+
+        while (true) {
+            delay(1000);
+        }
+    }
+
+    Serial.println("DFPlayer iniciado correctamente.");
+
+    // Volumen: 0 - 30
+    miPlayer.volume(25);
   // LEDs
   for (int i = 0; i < 4; i++) {
 
