@@ -100,7 +100,7 @@ void loop() {
 
         int pista = flag;
 
-        flag = 0;
+        
 
         miPlayer.playMp3Folder(pista);
 
