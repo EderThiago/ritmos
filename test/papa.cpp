@@ -96,6 +96,7 @@ void setup() {
 
 void loop() {
 
+    miPlayer.playMp3Folder(1);
     if (flag != 0) {
 
         int pista = flag;

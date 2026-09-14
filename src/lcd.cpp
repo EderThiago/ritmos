@@ -38,7 +38,7 @@ LiquidCrystal lcd(
 
 const int leds[4] = {
   5,
-  34,
+  2,
   27,
   32
 };
