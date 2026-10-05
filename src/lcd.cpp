@@ -14,7 +14,8 @@ DFRobotDFPlayerMini miPlayer;
 // Shield D1  -> D5
 // Shield D2  -> D6
 // Shield D3  -> D7
-
+//RW EN GND LA PUTA MADREEEEEEEE QUEE LO RE MIL PARIOOOOOOO
+//USAR GND DE MEDIO OYEEEEE MAC
 const int LCD_RS = 23;
 const int LCD_E  = 22;
 const int LCD_D4 = 16;
@@ -39,7 +40,7 @@ LiquidCrystal lcd(
 const int leds[4] = {
   5,
   2,
-  27,
+  15,
   32
 };
 
@@ -55,7 +56,9 @@ const int botones[4] = {
   13
 };
 
-
+const int modo=14;
+const int pulInicio=12;
+bool inicio=false;
 // =====================================================
 // JUEGO
 // =====================================================
@@ -324,6 +327,8 @@ void setup() {
 
 void loop() {
 
+ 
+  inicio=false; 
   // Mostrar nivel
   lcd.clear();
 
