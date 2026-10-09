@@ -38,9 +38,9 @@ LiquidCrystal lcd(
 // =====================================================
 
 const int leds[4] = {
-  5,
-  2,
-  15,
+  13,
+  21,
+  27,
   32
 };
 
@@ -50,15 +50,13 @@ const int leds[4] = {
 // =====================================================
 
 const int botones[4] = {
-  33,
-  21,
-  4,
-  13
+  36,
+  39,
+  34,
+  35
 };
 
-const int modo=14;
-const int pulInicio=12;
-bool inicio=false;
+
 // =====================================================
 // JUEGO
 // =====================================================
@@ -80,10 +78,10 @@ void iniciarJuego() {
   lcd.clear();
 
   lcd.setCursor(0, 0);
-  lcd.print("Nuevo juego!");
+  Serial.print("Nuevo juego!");
 
   lcd.setCursor(0, 1);
-  lcd.print("Preparate...");
+  Serial.print("Preparate...");
 
   delay(1500);
 }
@@ -148,10 +146,10 @@ bool jugadorRepiteSecuencia() {
   lcd.clear();
 
   lcd.setCursor(0, 0);
-  lcd.print("Tu turno!");
+  Serial.print("Tu turno!");
 
   lcd.setCursor(0, 1);
-  lcd.print("Repite la sec.");
+  Serial.print("Repite la sec.");
 
   for (int i = 0; i < nivel; i++) {
 
@@ -194,11 +192,11 @@ void perder() {
   lcd.clear();
 
   lcd.setCursor(0, 0);
-  lcd.print("   GAME OVER");
+  Serial.print("   GAME OVER");
 
   lcd.setCursor(0, 1);
-  lcd.print("Llegaste al ");
-  lcd.print(nivel);
+  Serial.print("Llegaste al ");
+  Serial.print(nivel);
 
 
   // Parpadeo de los 4 LEDs
@@ -233,10 +231,10 @@ void ganar() {
   lcd.clear();
 
   lcd.setCursor(0, 0);
-  lcd.print("   GANASTE!");
+  Serial.print("   GANASTE!");
 
   lcd.setCursor(0, 1);
-  lcd.print("Nivel MAX!");
+  Serial.print("Nivel MAX!");
 
 
   // Animación de victoria
@@ -271,9 +269,10 @@ void ganar() {
 void setup() {
 
   Serial.begin(115200);
+  lcd.begin(16, 2);
+  lcd.clear();
   miSerial.begin(9600, SERIAL_8N1, 25, 26);
   // LCD
-  lcd.begin(16, 2);
   lcd.clear();
   Serial.println("Iniciando DFPlayer...");
 
@@ -283,8 +282,8 @@ void setup() {
         Serial.println("Revisa conexiones y tarjeta microSD.");
 
         while (true) {
-            delay(1000);
-        }
+           delay(1000);
+        } 
     }
 
     Serial.println("DFPlayer iniciado correctamente.");
@@ -310,10 +309,10 @@ void setup() {
 
   // Pantalla de inicio
   lcd.setCursor(0, 0);
-  lcd.print("   SIMON GAME");
+  Serial.print("   SIMON GAME");
 
   lcd.setCursor(0, 1);
-  lcd.print("   Preparado!");
+  Serial.print("   Preparado!");
 
   delay(2000);
 
@@ -328,16 +327,16 @@ void setup() {
 void loop() {
 
  
-  inicio=false; 
+  
   // Mostrar nivel
   lcd.clear();
 
   lcd.setCursor(0, 0);
-  lcd.print("Nivel: ");
-  lcd.print(nivel);
+  Serial.print("Nivel: ");
+  Serial.print(nivel);
 
   lcd.setCursor(0, 1);
-  lcd.print("Mira la secuencia");
+  Serial.print("Mira la secuencia");
 
   delay(1500);
 
@@ -362,10 +361,10 @@ void loop() {
     lcd.clear();
 
     lcd.setCursor(0, 0);
-    lcd.print("   CORRECTO!");
+    Serial.print("   CORRECTO!");
 
     lcd.setCursor(0, 1);
-    lcd.print("Siguiente nivel");
+    Serial.print("Siguiente nivel");
 
     delay(1000);
 

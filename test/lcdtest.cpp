@@ -32,10 +32,281 @@ LiquidCrystal lcd(
   LCD_D7
 );
 
-void setup() {
-  lcd.begin(16, 2);
+
+// =====================================================
+// LEDs
+// =====================================================
+
+const int leds[4] = {
+  5,
+  2,
+  15,
+  32
+};
+
+
+// =====================================================
+// BOTONES
+// =====================================================
+
+const int botones[4] = {
+  33,
+  21,
+  4,
+  13
+};
+
+
+// =====================================================
+// JUEGO
+// =====================================================
+
+const int MAX_SECUENCIA = 10;
+
+int secuencia[MAX_SECUENCIA];
+
+int nivel;
+
+
+void iniciarJuego() {
+
+  nivel = 1;
+
+  // Primer elemento de la secuencia
+  secuencia[0] = random(0, 4);
+
   lcd.clear();
-  
+
+  lcd.setCursor(0, 0);
+  lcd.print("Nuevo juego!");
+
+  lcd.setCursor(0, 1);
+  lcd.print("Preparate...");
+
+  delay(1500);
+}
+
+
+// =====================================================
+// MOSTRAR SECUENCIA
+// =====================================================
+
+void mostrarSecuencia() {
+
+  for (int i = 0; i < nivel; i++) {
+
+    int numero = secuencia[i];
+
+
+    // Encender LED
+    digitalWrite(leds[numero], HIGH);
+    miPlayer.playMp3Folder(numero+1);
+    delay(500);
+
+
+    // Apagar LED
+    digitalWrite(leds[numero], LOW);
+
+    delay(250);
+  }
+}
+
+
+int esperarBoton() {
+
+  while (true) {
+
+    for (int i = 0; i < 4; i++) {
+
+      // LOW = botón presionado
+      if (digitalRead(botones[i]) == LOW) {
+        
+        // Antirrebote
+        delay(40);
+
+
+        // Esperar a que se suelte
+        while (digitalRead(botones[i]) == LOW) {
+
+          delay(5);
+        }
+
+
+        return i;
+      }
+    }
+  }
+}
+// =====================================================
+// TURNO DEL JUGADOR
+// =====================================================
+
+bool jugadorRepiteSecuencia() {
+
+  lcd.clear();
+
+  lcd.setCursor(0, 0);
+  lcd.print("Tu turno!");
+
+  lcd.setCursor(0, 1);
+  lcd.print("Repite la sec.");
+
+  for (int i = 0; i < nivel; i++) {
+
+    // Esperar botón
+    int boton = esperarBoton();
+
+
+    // Mostrar qué botón pulsó
+    digitalWrite(leds[boton], HIGH);
+    miPlayer.playMp3Folder(boton+1);
+    delay(200);
+
+    digitalWrite(leds[boton], LOW);
+
+
+    // Comprobar
+    if (boton != secuencia[i]) {
+
+      return false;
+    }
+  }
+
+  return true;
+}
+
+
+// =====================================================
+// ESPERAR BOTÓN
+// =====================================================
+
+
+
+
+// =====================================================
+// GAME OVER
+// =====================================================
+
+void perder() {
+  miPlayer.playMp3Folder(4);
+  lcd.clear();
+
+  lcd.setCursor(0, 0);
+  lcd.print("   GAME OVER");
+
+  lcd.setCursor(0, 1);
+  lcd.print("Llegaste al ");
+  lcd.print(nivel);
+
+
+  // Parpadeo de los 4 LEDs
+  for (int j = 0; j < 3; j++) {
+
+    // Encender todos
+    for (int i = 0; i < 4; i++) {
+
+      digitalWrite(leds[i], HIGH);
+    }
+
+    delay(250);
+
+
+    // Apagar todos
+    for (int i = 0; i < 4; i++) {
+
+      digitalWrite(leds[i], LOW);
+    }
+
+    delay(250);
+  }
+}
+
+
+// =====================================================
+// GANAR
+// =====================================================
+
+void ganar() {
+  miPlayer.playMp3Folder(4);
+  lcd.clear();
+
+  lcd.setCursor(0, 0);
+  lcd.print("   GANASTE!");
+
+  lcd.setCursor(0, 1);
+  lcd.print("Nivel MAX!");
+
+
+  // Animación de victoria
+  for (int j = 0; j < 3; j++) {
+
+    // Ida
+    for (int i = 0; i < 4; i++) {
+
+      digitalWrite(leds[i], HIGH);
+
+      delay(100);
+
+      digitalWrite(leds[i], LOW);
+    }
+
+
+    // Vuelta
+    for (int i = 2; i >= 0; i--) {
+
+      digitalWrite(leds[i], HIGH);
+
+      delay(100);
+
+      digitalWrite(leds[i], LOW);
+    }
+  }
+}
+// =====================================================
+// SETUP
+// =====================================================
+
+void setup() {
+
+  Serial.begin(115200);
+  lcd.begin(16, 2);
+  miSerial.begin(9600, SERIAL_8N1, 25, 26);
+  // LCD
+  lcd.clear();
+  Serial.println("Iniciando DFPlayer...");
+
+    if (!miPlayer.begin(miSerial)) {
+
+        Serial.println("No se encontro el DFPlayer.");
+        Serial.println("Revisa conexiones y tarjeta microSD.");
+
+        while (true) {
+            delay(1000);
+        }
+    }
+
+    Serial.println("DFPlayer iniciado correctamente.");
+
+    // Volumen: 0 - 30
+    miPlayer.volume(25);
+  // LEDs
+  for (int i = 0; i < 4; i++) {
+
+    pinMode(leds[i], OUTPUT);
+
+    digitalWrite(leds[i], LOW);
+  }
+
+  // Botones
+  for (int i = 0; i < 4; i++) {
+
+    pinMode(botones[i], INPUT_PULLUP);
+  }
+
+  // Semilla aleatoria
+  randomSeed(analogRead(34));
+
+  // Pantalla de inicio
   lcd.setCursor(0, 0);
   lcd.print("   SIMON GAME");
 
@@ -44,9 +315,90 @@ void setup() {
 
   delay(2000);
 
-  
+  iniciarJuego();
 }
+
+
+// =====================================================
+// LOOP PRINCIPAL
+// =====================================================
+
 void loop() {
+
+ 
+  
+  // Mostrar nivel
+  lcd.clear();
+
+  lcd.setCursor(0, 0);
+  lcd.print("Nivel: ");
+  lcd.print(nivel);
+
   lcd.setCursor(0, 1);
-  lcd.print("   Preparado!");
+  lcd.print("Mira la secuencia");
+
+  delay(1500);
+
+
+  // Mostrar secuencia
+  mostrarSecuencia();
+
+
+  delay(500);
+
+
+  // Turno del jugador
+  bool correcto = jugadorRepiteSecuencia();
+
+
+  if (correcto) {
+
+    // -----------------------------------------------
+    // RESPUESTA CORRECTA
+    // -----------------------------------------------
+
+    lcd.clear();
+
+    lcd.setCursor(0, 0);
+    lcd.print("   CORRECTO!");
+
+    lcd.setCursor(0, 1);
+    lcd.print("Siguiente nivel");
+
+    delay(1000);
+
+
+    if (nivel < MAX_SECUENCIA) {
+
+      // Agregar nuevo elemento
+      secuencia[nivel] = random(0, 4);
+
+      nivel++;
+
+    } else {
+
+      ganar();
+
+      delay(2000);
+
+      iniciarJuego();
+    }
+
+  } else {
+
+    // -----------------------------------------------
+    // RESPUESTA INCORRECTA
+    // -----------------------------------------------
+
+    perder();
+
+    delay(2000);
+
+    iniciarJuego();
+  }
 }
+
+
+// =====================================================
+// INICIAR JUEGO
+// =====================================================
