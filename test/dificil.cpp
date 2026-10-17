@@ -5,7 +5,7 @@
 // =====================================================
 const int leds[4] = {
   13,
-  25,
+  2,
   27,
   5
 };
@@ -25,7 +25,8 @@ const int botones[4] = {
 // =====================================================
 const int PIN_INICIO     = 16; // Pin seguro para iniciar la partida
 const int PIN_DIFICULTAD = 17; // Pin seguro para cambiar dificultad
-
+const int pinBuzzer = 32;
+const int frec[4] = {262, 523, 1047, 2093}; 
 // =====================================================
 // JUEGO CONFIGURACIÓN
 // =====================================================
@@ -64,6 +65,7 @@ void mostrarSecuencia() {
 
     // Encender LED e informar en consola
     digitalWrite(leds[numero], HIGH);
+    tone(pinBuzzer, frec[numero], 500); 
     Serial.print("-> LED [");
     Serial.print(numero + 1);
     Serial.println("] encendido");
@@ -102,6 +104,7 @@ bool jugadorRepiteSecuencia() {
     int boton = esperarBoton();
 
     digitalWrite(leds[boton], HIGH);
+    tone(pinBuzzer, frec[boton], 500);
     Serial.print("Apretaste boton [");
     Serial.print(boton + 1);
     Serial.println("]");
@@ -128,6 +131,7 @@ void perder() {
   // Parpadeo de advertencia de los 4 LEDs juntos
   for (int j = 0; j < 3; j++) {
     for (int i = 0; i < 4; i++) { digitalWrite(leds[i], HIGH); }
+    tone(pinBuzzer, 150, 500);
     delay(250);
     for (int i = 0; i < 4; i++) { digitalWrite(leds[i], LOW); }
     delay(250);

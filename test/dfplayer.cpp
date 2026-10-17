@@ -1,19 +1,20 @@
 #include <Arduino.h>
-#include "DFRobotDFPlayerMini.h"
+#include <LiquidCrystal.h> // Incluimos la librería para el LCD sin I2C
 
 // =====================================================
-// HARDWARE SERIAL & DFPLAYER
+// LCD 1602 (Pines asignados en modo 4 bits)
+// Pines LCD:     RS  E   D4  D5  D6  D7
 // =====================================================
-HardwareSerial miSerial(1);
-DFRobotDFPlayerMini miPlayer;
+LiquidCrystal lcd(13, 12, 23, 27, 26, 25); 
 
 // =====================================================
-// LEDs (Pines estables sin tirones lógicos de arranque)
+// LEDs (Ajustados para no colisionar con el LCD)
+// Cambiados el 13 y 27 por los pines seguros 18 y 19
 // =====================================================
 const int leds[4] = {
-  13,
-  2, // Modificado en base a tu penúltima lista estable de LEDs
-  27,
+  18, // Cambiado (antes 13, usado por el LCD)
+  2,
+  19, // Cambiado (antes 27, usado por el LCD)
   5
 };
 
@@ -32,6 +33,8 @@ const int botones[4] = {
 // =====================================================
 const int PIN_INICIO     = 16; 
 const int PIN_DIFICULTAD = 17; 
+const int pinBuzzer = 32;
+const int frec[4] = {262, 523, 1047, 2093}; 
 
 // =====================================================
 // JUEGO CONFIGURACIÓN
@@ -43,19 +46,32 @@ int nivel;
 // Modos de dificultad: false = FÁCIL, true = DIFÍCIL
 bool modoDificil = false; 
 
+// =====================================================
+// FUNCIÓN PARA IMPRIMIR EN SERIAL Y LCD SIMULTÁNEAMENTE
+// =====================================================
+void mostrarMensaje(String linea1, String linea2) {
+  // Imprimir en el Monitor Serial
+  Serial.println("-----------------------");
+  Serial.println("LCD L1: " + linea1);
+  Serial.println("LCD L2: " + linea2);
+  
+  // Imprimir en la Pantalla LCD
+  lcd.clear();             
+  lcd.setCursor(0, 0);     
+  lcd.print(linea1);
+  lcd.setCursor(0, 1);     
+  lcd.print(linea2);
+}
+
 void iniciarJuego() {
   nivel = 1;
-
-  // Primer elemento de la secuencia aleatoria
   secuencia[0] = random(0, 4);
 
-  Serial.println("\n========================");
-  Serial.print("  ¡PARTIDA INICIADA! (Modo ");
-  Serial.print(modoDificil ? "DIFICIL" : "FACIL");
-  Serial.println(")");
-  Serial.println("========================");
-  Serial.println("Preparate...");
-
+  String difStr = modoDificil ? "DIFICIL" : "FACIL";
+  mostrarMensaje("PARTIDA INICIADA", "Modo: " + difStr);
+  delay(1500);
+  
+  mostrarMensaje("Preparate...", "");
   delay(1500);
 }
 
@@ -63,19 +79,17 @@ void iniciarJuego() {
 // MOSTRAR SECUENCIA
 // =====================================================
 void mostrarSecuencia() {
-  Serial.println("\nMira la secuencia atentamente...");
-  delay(500);
+  mostrarMensaje("Mira la secuencia", "atentamente...");
+  delay(1000);
 
   for (int i = 0; i < nivel; i++) {
     int numero = secuencia[i];
 
-    // Encender LED, informar en consola y reproducir pista asociada (1 a 4)
+    // Encender LED e informar en consola/LCD
     digitalWrite(leds[numero], HIGH);
-    Serial.print("-> LED [");
-    Serial.print(numero + 1);
-    Serial.println("] encendido");
+    tone(pinBuzzer, frec[numero], 500); 
     
-    miPlayer.playMp3Folder(numero + 1); // Pistas 1, 2, 3 o 4 según el LED
+    mostrarMensaje("Mostrando...", "LED: [" + String(numero + 1) + "]");
     delay(500);
 
     // Apagar LED
@@ -103,20 +117,16 @@ int esperarBoton() {
 // TURNO DEL JUGADOR
 // =====================================================
 bool jugadorRepiteSecuencia() {
-  Serial.println("\n------------------------");
-  Serial.println(" ¡Tu turno! Repeti la secuencia...");
-  Serial.println("------------------------");
+  mostrarMensaje("¡Tu turno!", "Repeti secuencia");
+  delay(500);
 
   for (int i = 0; i < nivel; i++) {
     int boton = esperarBoton();
 
-    // Encender LED, informar en consola y sonar la misma pista del LED
     digitalWrite(leds[boton], HIGH);
-    Serial.print("Apretaste boton [");
-    Serial.print(boton + 1);
-    Serial.println("]");
+    tone(pinBuzzer, frec[boton], 500);
     
-    miPlayer.playMp3Folder(boton + 1);
+    mostrarMensaje("Apretaste:", "Boton [" + String(boton + 1) + "]");
     delay(200);
     digitalWrite(leds[boton], LOW);
 
@@ -131,17 +141,12 @@ bool jugadorRepiteSecuencia() {
 // GAME OVER
 // =====================================================
 void perder() {
-  Serial.println("\n************************");
-  Serial.println("       GAME OVER        ");
-  Serial.println("************************");
-  Serial.print("Llegaste hasta el nivel: ");
-  Serial.println(nivel);
-  
-  miPlayer.playMp3Folder(5); // Pista 5: Sonido de perder/Game Over
+  mostrarMensaje("   GAME OVER    ", "Nivel logrado: " + String(nivel));
   
   // Parpadeo de advertencia de los 4 LEDs juntos
   for (int j = 0; j < 3; j++) {
     for (int i = 0; i < 4; i++) { digitalWrite(leds[i], HIGH); }
+    tone(pinBuzzer, 150, 500);
     delay(250);
     for (int i = 0; i < 4; i++) { digitalWrite(leds[i], LOW); }
     delay(250);
@@ -152,12 +157,7 @@ void perder() {
 // GANAR JUEGO (Nivel Máximo logrado)
 // =====================================================
 void ganar() {
-  Serial.println("\n************************");
-  Serial.println("   ¡GANASTE EL JUEGO!   ");
-  Serial.println("************************");
-  Serial.println("¡Alcanzaste el Nivel MAX!");
-
-  miPlayer.playMp3Folder(6); // Pista 6: Sonido de victoria extendido
+  mostrarMensaje("¡GANASTE EL JUEGO!", "¡Nivel MAX logrado!");
 
   // Animación de luces de victoria (Ida y vuelta)
   for (int j = 0; j < 3; j++) {
@@ -174,34 +174,29 @@ void ganar() {
 // MENU DE CONFIGURACIÓN ANTES DE EMPEZAR
 // =====================================================
 void menuConfiguracion() {
-  Serial.println("\n==================================");
-  Serial.println("          MENU DE INICIO          ");
-  Serial.println("==================================");
-  Serial.print("Dificultad actual: [ ");
-  Serial.print(modoDificil ? "DIFICIL" : "FACIL");
-  Serial.println(" ]");
-  Serial.println("-> Presiona Pul. DIFICULTAD (GPIO 17) para cambiar.");
-  Serial.println("-> Presiona Pul. INICIO (GPIO 16) para empezar a jugar.");
-  Serial.println("----------------------------------");
+  String difStr = modoDificil ? "DIFICIL" : "FACIL";
+  mostrarMensaje(" MENU DE INICIO ", "Dificultad: " + difStr);
 
+  // Bucle infinito esperando que se decida iniciar el juego
   while (true) {
     // Detectar botón de cambio de dificultad
     if (digitalRead(PIN_DIFICULTAD) == LOW) {
       delay(40); // Antirrebote
       while (digitalRead(PIN_DIFICULTAD) == LOW) { delay(5); } // Esperar soltar
       
-      modoDificil = !modoDificil; 
+      modoDificil = !modoDificil; // Alternar dificultad
+      difStr = modoDificil ? "DIFICIL" : "FACIL";
       
-      Serial.print("Cambio de dificultad -> MODO: ");
-      Serial.println(modoDificil ? "DIFICIL (Se añaden +2 LEDs)" : "FACIL (Se añade +1 LED)");
+      mostrarMensaje("Cambio Modo: ", "-> " + difStr);
+      delay(1000); // Pequeña pausa para que se lea el cambio
+      mostrarMensaje(" MENU DE INICIO ", "Dificultad: " + difStr);
     }
 
     // Detectar botón de inicio de partida
     if (digitalRead(PIN_INICIO) == LOW) {
-      delay(40); 
-      while (digitalRead(PIN_INICIO) == LOW) { delay(5); } 
-      
-      break; 
+      delay(40); // Antirrebote
+      while (digitalRead(PIN_INICIO) == LOW) { delay(5); } // Esperar soltar
+      break; // Salir del menú e ir al juego
     }
     delay(10);
   }
@@ -214,17 +209,9 @@ void setup() {
   Serial.begin(115200);
   while (!Serial) { ; }
 
-  // Comunicación serial con el DFPlayer (RX=25, TX=26 de la placa al módulo)
-  miSerial.begin(9600, SERIAL_8N1, 25, 26);
-  
-  Serial.println("Iniciando DFPlayer...");
-  if (!miPlayer.begin(miSerial)) {
-    Serial.println("No se encontro el DFPlayer.");
-    Serial.println("Verifica conexiones, alimentacion a 5V y tarjeta MicroSD.");
-    while (true) { delay(1000); } 
-  }
-  Serial.println("DFPlayer iniciado correctamente.");
-  miPlayer.volume(15); // Volumen seguro (0-30) para evitar picos de corriente excesivos
+  // Inicializar el LCD (16 columnas y 2 filas)
+  lcd.begin(16, 2); 
+  mostrarMensaje("Iniciando hardware", "Cargando...");
 
   // Configuración de pines de LEDs
   for (int i = 0; i < 4; i++) {
@@ -237,7 +224,7 @@ void setup() {
     pinMode(botones[i], INPUT_PULLUP);
   }
 
-  // Configuración de botones de menú
+  // Configuración de nuevos botones de menú
   pinMode(PIN_INICIO, INPUT_PULLUP);
   pinMode(PIN_DIFICULTAD, INPUT_PULLUP);
 
@@ -252,10 +239,7 @@ void setup() {
 // LOOP PRINCIPAL
 // =====================================================
 void loop() {
-  Serial.println("\n------------------------");
-  Serial.print("NIVEL: ");
-  Serial.println(nivel);
-  Serial.println("------------------------");
+  mostrarMensaje("NIVEL JUEGO:", ">> " + String(nivel) + " <<");
   delay(1000);
 
   mostrarSecuencia();
@@ -264,17 +248,16 @@ void loop() {
   bool correcto = jugadorRepiteSecuencia();
 
   if (correcto) {
-    Serial.println("\n>>> ¡CORRECTO! <<<");
+    mostrarMensaje(">>> ¡CORRECTO! <<<", "Siguiente nivel");
     delay(1000);
 
     if (nivel < MAX_SECUENCIA) {
       if (modoDificil) {
-        // MODO DIFÍCIL: Añade dos pasos nuevos al patrón
         if (nivel + 2 <= MAX_SECUENCIA) {
           secuencia[nivel] = random(0, 4);
           secuencia[nivel + 1] = random(0, 4);
           nivel += 2;
-          Serial.println("¡Secuencia acertada! Se sumaron +2 pasos al patrón.");
+          mostrarMensaje("Modo Dificil!", "Sumados +2 pasos");
         } else {
           ganar();
           delay(2000);
@@ -282,10 +265,8 @@ void loop() {
           iniciarJuego();
         }
       } else {
-        // MODO FÁCIL: Añade un solo paso nuevo al patrón
         secuencia[nivel] = random(0, 4);
         nivel++;
-        Serial.println("Pasando al siguiente nivel (+1 paso)...");
       }
       delay(1000);
     } else {
