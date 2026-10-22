@@ -7,25 +7,26 @@
 // =====================================================
 LiquidCrystal lcd(13, 12, 23, 27, 26, 25); 
 
+
 // =====================================================
 // LEDs (Ajustados para no colisionar con el LCD)
 // Cambiados el 13 y 27 por los pines seguros 18 y 19
 // =====================================================
 const int leds[4] = {
-  18, // Cambiado (antes 13, usado por el LCD)
-  2,
-  19, // Cambiado (antes 27, usado por el LCD)
-  5
+  19, // Cambiado (antes 13, usado por el LCD)
+  18,
+  5, // Cambiado (antes 27, usado por el LCD)
+  2
 };
 
 // =====================================================
 // BOTONES DEL JUEGO (Con resistencia PULL-UP interna)
 // =====================================================
 const int botones[4] = {
-  33,
+  15,
   4,
-  14,
-  15
+  33,
+  14
 };
 
 // =====================================================
